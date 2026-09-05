@@ -3,7 +3,18 @@
     "description": "\"Gestion des réservations de salles universitaires\"",
     "autoload": {
         "psr-4": {
-            "App\\": "src/"
+            "App\\": "src/",
+            "Config\\":"config/",
+            "Database\\":"database/",
+            "Routes\\":"routes/",
+            "Tests\\":"tests/",
+            "Templates\\":"templates/"
+
+
+
+            
+
+
         }
     },
     "authors": [
