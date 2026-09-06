@@ -26,4 +26,23 @@ final class SalleRepository implements SalleRepositoryInterface
     {
         return Salle::create($donnees);
     }
+
+    public function findAll(): array
+    {
+        return Salle::orderBy('nom')->get()->all();
+    }
+
+    public function update(int $id, array $donnees): ?Salle
+    {
+    $salle = $this->findById($id);
+
+    if ($salle === null) {
+        return null;
+    }
+
+    $salle->fill($donnees);
+    $salle->save();
+
+    return $salle;
+}
 }
