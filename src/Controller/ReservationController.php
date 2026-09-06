@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\DTO\CreerReservationDTO;
+use App\DTO\CreerReservationDto;
 use App\Exception\ReglesMetierException;
 use App\Exception\SalleIndisponibleException;
 use App\Repository\ReservationRepositoryInterface;
 use App\Service\CreerReservationService;
 use App\Validation\ReservationValidator;
 use App\Controller\RenderViewTrait;
+use App\Exception\ReservationIntrouvableException;
+use App\Service\AnnulerReservationService;
 
 final class ReservationController
 {
@@ -19,6 +21,7 @@ final class ReservationController
         private readonly ReservationRepositoryInterface $reservationRepository,
         private readonly ReservationValidator $validator,
         private readonly CreerReservationService $creerReservationService,
+        private readonly AnnulerReservationService $annulerReservationService
     ) {}
 
     public function index(): string
@@ -66,9 +69,14 @@ final class ReservationController
 
     $this->rediriger("/reservations/{$reservation->id}"); 
     }
-    public function cancel(int $id): string
+
+   public function cancel(int $id): string
 {
-    $this->reservationRepository->annuler($id);
+    try {
+        $this->annulerReservationService->annuler($id);
+    } catch (ReservationIntrouvableException $e) {
+        return $this->renderView('error/404', ['message' => $e->getMessage()]);
+    }
 
     $this->rediriger('/reservations');
 }
