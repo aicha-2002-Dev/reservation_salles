@@ -24,3 +24,54 @@ Dans un seul endroit centralisé — ici config/database.php — jamais dispers�
 
 4. Quelle différence existe entre ORM et SQL écrit à la main ?
 Le SQL à la main donne un contrôle total et souvent de meilleures performances sur des requêtes complexes, mais oblige à écrire soi-même le mapping entre lignes de résultat et objets PHP, à gérer manuellement l'échappement (risque d'injection SQL si mal fait), et à dupliquer beaucoup de code répétitif (CRUD). Un ORM comme Eloquent représente chaque table comme une classe (pattern Active Record), génère le SQL automatiquement à partir d'appels de méthodes PHP, gère les relations entre tables, et prépare systématiquement les requêtes contre les injections — au prix d'un peu moins de contrôle fin et d'une couche d'abstraction à comprendre.
+
+# PARTIE 3
+
+1. Quel type de relation Eloquent avez-vous utilisé ?
+Une relation (one to many) un-à-plusieurs (hasMany / belongsTo) : une salle peut avoir plusieurs réservations, mais chaque réservation appartient à une seule salle. C'est la paire de relations Eloquent la plus courante pour ce genre de lien parent-enfant.
+
+2. Pourquoi déclarer $fillable ou $guarded ?
+Pour se protéger contre l'assignation de masse non contrôlée. Sans l'un ou l'autre, un appel comme Salle::create($_POST) pourrait laisser un utilisateur malveillant injecter n'importe quel champ dans le formulaire (même des colonnes qu'il ne devrait pas pouvoir toucher, comme un futur champ is_admin sur un autre modèle). $fillable est une liste blanche (seuls ces champs sont autorisés), $guarded est une liste noire (tous les champs sauf ceux-ci) — on utilise généralement $fillable, plus sûr par défaut car explicite.
+
+3. Pourquoi convertir active en booléen ?
+Parce que MySQL n'a pas de vrai type booléen natif — active est stockée en TINYINT(1) (0 ou 1). Sans le cast, $salle->active renverrait l'entier 1 ou 0, ce qui fonctionne dans un if par coïncidence de type, mais rend le code moins lisible et plus fragile (une comparaison stricte $salle->active === true échouerait sans le cast). Le cast garantit un vrai type PHP cohérent partout dans l'application.
+
+4. Pourquoi convertir les dates en objets ?
+Parce que manipuler des dates comme de simples chaînes de caractères oblige à reparser manuellement à chaque comparaison (strtotime(), DateTime::createFromFormat()...). Un objet Carbon offre directement des méthodes lisibles (isPast(), diffInHours(), format()) — ce qui sera indispensable pour implémenter les règles métier de l'étape 8 (durée max 4h, date dans le futur, détection de chevauchement).
+
+# PARTIE 4
+
+1. Quelle différence existe entre migration et seeder ?
+Une migration définit et fait évoluer la structure de la base de données (créer une table, ajouter une colonne, changer un type) — c'est le "contenant". Un seeder insère des données dans des tables déjà existantes — c'est le "contenu".Une migration s'execute une sule fois alors q'un seeder peut  s'executer plusieurs fois pour peupler la base de donnees.
+
+2. Pourquoi les données initiales doivent-elles être reproductibles ?
+Parce que le script sera exécuté sur des environnements différents et à des moments différents : votre machine, celle d'un correcteur qui clone le dépôt, éventuellement une réinstallation après un problème local.
+
+3. Comment empêcher les doublons ?
+En vérifiant, avant chaque insertion, qu'une ligne correspondant aux mêmes critères n'existe pas déjà — c'est exactement le rôle de firstOrCreate() ici, qui encapsule ce couple recherche-puis-création-conditionnelle en une seule méthode Eloquent, plutôt que d'écrire vous-même un SELECT suivi d'un if puis d'un INSERT.
+
+# PARTIE 5
+
+1. Pourquoi séparer la validation syntaxique des règles métier ?
+Parce que ce sont deux préoccupations différentes, qui changent pour des raisons différentes (principe S de SOLID) : la validation syntaxique vérifie la forme des données (une date est bien une date, un email a bien un @), indépendamment de tout contexte. Les règles métier, elles, dépendent de l'état de l'application.
+
+2. Pourquoi créer une interface de validation ?
+Pour que le code qui utilise le validateur (le futur Contrôleur) dépende d'une abstraction plutôt que d'une classe concrète précise — c'est le principe D de SOLID (inversion des dépendances), rendu concret par le pattern Strategy : demain, si vous ajoutez un troisième type de ressource à valider, vous créez une nouvelle classe qui implémente ValidatorInterface, sans toucher au code existant qui l'utilise.
+
+3. Pourquoi le validateur ne doit-il pas enregistrer les données ?
+Parce que ce serait mélanger deux responsabilités distinctes : vérifier la forme des données, et les persister. Un validateur qui écrirait aussi en base deviendrait difficile à réutiliser (impossible de valider sans effet de bord).
+
+4. Comment retourner plusieurs erreurs en une seule fois ?
+Le tableau $erreurs accumule ainsi toutes les erreurs de tous les champs, avant d'être empaqueté dans un seul ValidationResult::failure($erreurs)
+
+# PARTIE 6
+
+1. Quelle différence existe entre un DTO et une entité (modèle Eloquent) ?
+Une entité est liée à la persistance : elle sait se sauvegarder, se charger depuis la base, gérer des relations, et porte souvent plus de champs que nécessaire pour une opération précise. Un DTO n'a aucun lien avec la base de données — c'est une structure de données neutre, qui ne transporte que ce qui est strictement nécessaire pour une opération donnée.
+
+2. Pourquoi le DTO ne doit-il pas contenir de logique métier ?
+Parce que son rôle est uniquement de transporter des données déjà validées, entre deux couches de l'application (typiquement du Contrôleur vers le Service).
+
+3. Pourquoi utiliser des propriétés typées ?
+Pour que PHP lui-même garantisse, à la compilation et à l'exécution, que $dto->capacite est toujours un vrai entier et jamais une chaîne mal formée — combiné à declare(strict_types=1), ça élimine les bugs silencieux liés aux conversions implicites, en forçant les erreurs de type à apparaître immédiatement plutôt que de se propager silencieusement plus loin dans le code.
+
