@@ -3,13 +3,10 @@ namespace Config;
 
 use Illuminate\Database\Capsule\Manager as Capsule;
 
-// Chargement du .env — une seule fois, ici, nulle part ailleurs
 $dotenv = \Dotenv\Dotenv::createImmutable(dirname(__DIR__));
 $dotenv->safeLoad();
 
-/**
- * Renvoie toujours la même instance de Capsule, déjà connectée et démarrée.
- */
+
 return static function (): Capsule {
     static $capsule = null;
 

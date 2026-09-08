@@ -15,15 +15,10 @@ final class CreerReservationDto
         public readonly \DateTimeImmutable $dateFin,
     ) {}
 
-    public static function fromArray(array $data): self
+    public static function build(): CreerReservationDtoBuilder
     {
-        return new self(
-            salleId: (int) $data['salle_id'],
-            responsable: $data['responsable'],
-            email: $data['email'],
-            motif: $data['motif'],
-            dateDebut: new \DateTimeImmutable($data['date_debut']),
-            dateFin: new \DateTimeImmutable($data['date_fin']),
-        );
+        return new CreerReservationDtoBuilder();
     }
+
+    
 }

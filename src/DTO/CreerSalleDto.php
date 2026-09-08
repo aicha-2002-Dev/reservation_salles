@@ -13,13 +13,8 @@ final class CreerSalleDto
         public readonly string $type,
     ) {}
 
-    public static function fromArray(array $data): self
+    public static function build(): CreerSalleDtoBuilder
     {
-        return new self(
-            nom: $data['nom'],
-            batiment: $data['batiment'],
-            capacite: (int) $data['capacite'],
-            type: $data['type'],
-        );
+        return new CreerSalleDtoBuilder();
     }
 }
