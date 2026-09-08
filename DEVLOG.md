@@ -1,6 +1,8 @@
+Un ORM (Objet Relationel Mapping) est un outil qui permet a une base de donnees de communiquer avec sa base de donnees sans ecrire directement des requetes SQL.
+Dans le code on manipule des objets mais l'ORM se charge de les convertir en tables et requetes sql.
 # PARTIE 1
 1. Quel est le rôle de Composer ?
-Composer est le gestionnaire de dépendances de PHP : il télécharge les bibliothèques externes dont votre projet a besoin (ici FastRoute, Eloquent, PHP-DI...), résout les conflits de version entre elles, et génère un autoloader qui charge automatiquement les classes sans require manuel.
+Composer est le gestionnaire de dépendances de PHP : il télécharge les bibliothèques externes dont votre projet a besoin (FastRoute, Eloquent, PHP-DI...), résout les conflits de version entre elles, et génère un autoloader qui charge automatiquement les classes sans require manuel.
 
 2. Quelle différence existe entre require et require-dev ?
 require liste les dépendances nécessaires en production (le code ne fonctionne pas sans elles — ex. illuminate/database, php-di/php-di). require-dev liste les dépendances utiles seulement pendant le développement (ex. PHPUnit pour les tests à l'étape 12) : elles ne sont pas installées si quelqu'un déploie le projet avec composer install --no-dev.
@@ -14,15 +16,15 @@ vendor/ contient le code source complet de toutes les dépendances (souvent des 
 # PARTIE 2
 
 1. Quel rôle joue Capsule\Manager ?
-C'est le point d'entrée qui permet à Eloquent de fonctionner sans le conteneur de services et le "kernel" complets de Laravel. Normalement, Eloquent va chercher sa connexion via le conteneur global de l'application Laravel ; Capsule\Manager remplace ce mécanisme en jouant lui-même le rôle de gestionnaire de connexions, qu'on configure et démarre manuellement.
+C'est le point d'entrée qui permet à Eloquent de fonctionner sans Laravel. Normalement, Eloquent va chercher sa connexion via le conteneur global de l'application Laravel ; Capsule\Manager remplace ce mécanisme en jouant lui-même le rôle de gestionnaire de connexions, qu'on configure et démarre manuellement.
 
 2. Pourquoi Eloquent peut-il fonctionner sans Laravel ?
-Parce que illuminate/database est un paquet Composer indépendant, découplé du reste du framework Laravel — c'est justement le principe d'Interface Segregation à l'échelle d'un framework : Laravel est découpé en composants installables séparément. Capsule\Manager fournit la petite couche de bootstrap qui, dans Laravel, serait normalement assurée automatiquement par le framework complet.
+Parce que illuminate/database est un paquet Composer indépendant, découplé du reste du framework Laravel — Laravel est découpé en composants installables séparément. Capsule\Manager fournit la petite couche de bootstrap qui, dans Laravel, serait normalement assurée automatiquement par le framework complet.
 
 3. Où doit se trouver le démarrage de l'ORM ?
-Dans un seul endroit centralisé — ici config/database.php — jamais dispersé dans plusieurs classes. C'est une application directe du principe de responsabilité unique (S de SOLID) : une seule partie du code a la responsabilité de savoir comment se connecter à la base.
+Dans un endroit centralisé config/database.php — jamais dispersé dans plusieurs classes. C'est une application directe du principe de responsabilité unique (S de SOLID) : une seule partie du code a la responsabilité de savoir comment se connecter à la base.
 
-4. Quelle différence existe entre ORM et SQL écrit à la main ?
+1. Quelle différence existe entre ORM et SQL écrit à la main ?
 Le SQL à la main donne un contrôle total et souvent de meilleures performances sur des requêtes complexes, mais oblige à écrire soi-même le mapping entre lignes de résultat et objets PHP, à gérer manuellement l'échappement (risque d'injection SQL si mal fait), et à dupliquer beaucoup de code répétitif (CRUD). Un ORM comme Eloquent représente chaque table comme une classe (pattern Active Record), génère le SQL automatiquement à partir d'appels de méthodes PHP, gère les relations entre tables, et prépare systématiquement les requêtes contre les injections — au prix d'un peu moins de contrôle fin et d'une couche d'abstraction à comprendre.
 
 # PARTIE 3

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\DTO;
 
-final class CreerReservationDTO
+final class CreerReservationDto
 {
     public function __construct(
         public readonly int $salleId,

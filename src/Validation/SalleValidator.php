@@ -14,11 +14,10 @@ final class SalleValidator implements ValidatorInterface
     public function validate(array $data): ValidationResult
     {
         $regles = [
-            'nom'      => v::stringType()->length(2, 100),
-            'batiment' => v::stringType()->length(2, 100),
-            'capacite' => v::intVal()->between(1, 1000),
-            'type'     => v::in(self::TYPES_AUTORISES),
-            'active'   => v::boolVal(),
+            'nom'      => v::stringType()->length(2, 100)->setName('Le nom'),
+            'batiment' => v::stringType()->length(2, 100)->setName('Le bâtiment'),
+            'capacite' => v::intVal()->between(1, 1000)->setName('La capacité'),
+            'type'     => v::in(self::TYPES_AUTORISES)->setName('Le type'),
         ];
 
         $erreurs = [];
@@ -27,7 +26,7 @@ final class SalleValidator implements ValidatorInterface
             try {
                 $regle->assert($data[$champ] ?? null);
             } catch (ValidationException $e) {
-                $erreurs[$champ] = $e->getMessage();
+                $erreurs[$champ] = $this->extraireMessages($e);
             }
         }
 
@@ -36,5 +35,16 @@ final class SalleValidator implements ValidatorInterface
         }
 
         return ValidationResult::success($data);
+    }
+
+    private function extraireMessages(ValidationException $e): array
+    {
+        $messages = $e->getMessages();
+
+        if (is_string($messages)) {
+            return [$messages];
+        }
+
+        return array_values($messages);
     }
 }

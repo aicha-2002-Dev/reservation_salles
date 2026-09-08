@@ -17,6 +17,7 @@ use App\Service\AnnulerReservationService;
 final class ReservationController
 {
     use RenderViewTrait;
+
     public function __construct(
         private readonly ReservationRepositoryInterface $reservationRepository,
         private readonly ReservationValidator $validator,
@@ -47,37 +48,46 @@ final class ReservationController
 
     public function store(array $donneesFormulaire): string
     {
-    $resultat = $this->validator->validate($donneesFormulaire);
+        $resultat = $this->validator->validate($donneesFormulaire);
 
-    if (!$resultat->isValid()) {
-        return $this->renderView('reservation/create', [
-            'erreurs' => $resultat->errors(),
-            'anciennesValeurs' => $donneesFormulaire,
-        ]);
+        if (!$resultat->isValid()) {
+            return $this->renderView('reservation/create', [
+                'erreurs' => $resultat->errors(),
+                'anciennesValeurs' => $donneesFormulaire,
+            ]);
+        }
+
+        $donnees = $resultat->validatedData();
+
+        $dto = CreerReservationDto::build()
+            ->salleId((int) $donnees['salle_id'])
+            ->responsable($donnees['responsable'])
+            ->email($donnees['email'])
+            ->motif($donnees['motif'])
+            ->dateDebut(new \DateTimeImmutable($donnees['date_debut']))
+            ->dateFin(new \DateTimeImmutable($donnees['date_fin']))
+            ->build();
+
+        try {
+            $reservation = $this->creerReservationService->creer($dto);
+        } catch (SalleIndisponibleException|ReglesMetierException $e) {
+            return $this->renderView('reservation/create', [
+                'erreurs' => ['general' => [$e->getMessage()]],
+                'anciennesValeurs' => $donneesFormulaire,
+            ]);
+        }
+
+        $this->rediriger("/reservations/{$reservation->id}");
     }
 
-    $dto = CreerReservationDTO::fromArray($resultat->validatedData());
+    public function cancel(int $id): string
+    {
+        try {
+            $this->annulerReservationService->annuler($id);
+        } catch (ReservationIntrouvableException $e) {
+            return $this->renderView('error/404', ['message' => $e->getMessage()]);
+        }
 
-    try {
-        $reservation = $this->creerReservationService->creer($dto);
-    } catch (SalleIndisponibleException|ReglesMetierException $e) {
-        return $this->renderView('reservation/create', [
-            'erreurs' => ['general' => [$e->getMessage()]],
-            'anciennesValeurs' => $donneesFormulaire,
-        ]);
+        $this->rediriger('/reservations');
     }
-
-    $this->rediriger("/reservations/{$reservation->id}"); 
-    }
-
-   public function cancel(int $id): string
-{
-    try {
-        $this->annulerReservationService->annuler($id);
-    } catch (ReservationIntrouvableException $e) {
-        return $this->renderView('error/404', ['message' => $e->getMessage()]);
-    }
-
-    $this->rediriger('/reservations');
-}
 }

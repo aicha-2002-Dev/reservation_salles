@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\DTO;
 
-final class ModifierSalleDTO
+final class ModifierSalleDto
 {
     public function __construct(
         public readonly int $id,

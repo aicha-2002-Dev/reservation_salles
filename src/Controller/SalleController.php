@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\DTO\CreerSalleDTO;
-use App\DTO\ModifierSalleDTO;
+use App\DTO\CreerSalleDto;
+use App\DTO\ModifierSalleDto;
 use App\Exception\SalleIndisponibleException;
 use App\Repository\SalleRepositoryInterface;
 use App\Service\CreerSalleService;
@@ -44,18 +44,26 @@ final class SalleController
         return $this->renderView('salle/create', ['erreurs' => [], 'anciennesValeurs' => []]);
     }
 
-    public function store(array $donneesFormulaire): string
+   public function store(array $donneesFormulaire): string
 {
     $resultat = $this->validator->validate($donneesFormulaire);
 
     if (!$resultat->isValid()) {
-        return $this->rendre('salle/create', [
+        return $this->renderView('salle/create', [
             'erreurs' => $resultat->errors(),
             'anciennesValeurs' => $donneesFormulaire,
         ]);
     }
 
-    $dto = CreerSalleDTO::fromArray($resultat->validatedData());
+    $donnees = $resultat->validatedData();
+
+    $dto = CreerSalleDto::build()
+        ->nom($donnees['nom'])
+        ->batiment($donnees['batiment'])
+        ->capacite((int) $donnees['capacite'])
+        ->type($donnees['type'])
+        ->build();
+
     $salle = $this->creerSalleService->creer($dto);
 
     $this->rediriger("/salles/{$salle->id}");
