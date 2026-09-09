@@ -6,10 +6,12 @@ use FastRoute\Dispatcher;
 
 require __DIR__ . '/../vendor/autoload.php';
 
+// Démarrer Eloquent explicitement, une fois pour toutes
 $capsuleFactory = require __DIR__ . '/../config/database.php';
 $capsuleFactory();
 
-$obtenirControleur = require __DIR__ . '/../config/conteneur-transitoire.php';
+$containerFactory = require __DIR__ . '/../config/container.php';
+$container = $containerFactory();
 
 $dispatcher = FastRoute\simpleDispatcher(require __DIR__ . '/../routes/web.php');
 
@@ -39,7 +41,7 @@ switch ($routeInfo[0]) {
         [$classeControleur, $methode] = $routeInfo[1];
         $parametres = $routeInfo[2];
 
-        $controleur = $obtenirControleur($classeControleur);
+        $controleur = $container->get($classeControleur);
 
         $donneesRequete = $_SERVER['REQUEST_METHOD'] === 'POST' ? $_POST : [];
 
