@@ -39,7 +39,7 @@ final class ReservationValidator implements ValidatorInterface
 
     private function extraireMessages(ValidationException $e): array
     {
-        $messages = $e->getMessages();
+        $messages = $e->getMessage();
 
         if (is_string($messages)) {
             return [$messages];

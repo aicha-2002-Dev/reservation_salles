@@ -13,3 +13,5 @@ Puis, avec le docker-compose.yml de ce dépôt (qui inclut aussi le service MySQ
 docker compose up -d
 docker compose exec app php database/migrate.php
 docker compose exec app php database/seed.php
+
+Le fichier container.php illustre concrètement le principe D (inversion des dépendances), mais poussé à son maximum grâce à l'autowiring : non seulement vos classes dépendent d'abstractions (les interfaces), mais c'est le conteneur, pas vous, qui a la responsabilité de résoudre ces dépendances au moment de l'exécution — c'est précisément ce qu'on appelle l'Inversion of Control (IoC).
