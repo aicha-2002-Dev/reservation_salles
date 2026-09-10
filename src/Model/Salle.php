@@ -9,7 +9,6 @@ use App\Model\Reservation;
 
 class Salle extends Model
 {
-    protected $table = 'salles';
 
     protected $fillable = [
         'nom',

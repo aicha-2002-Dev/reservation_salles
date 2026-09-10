@@ -12,12 +12,12 @@ final class ReservationValidator implements ValidatorInterface
     public function validate(array $data): ValidationResult
     {
         $regles = [
-            'salle_id'    => v::intVal()->positive(),
-            'responsable' => v::stringType()->length(2, 120),
-            'email'       => v::email(),
-            'motif'       => v::stringType()->length(5, 255),
-            'date_debut'  => v::date(),
-            'date_fin'    => v::date(),
+            'salle_id'    => v::intVal()->positive()->setName("L'identifiant de la salle"),
+            'responsable' => v::stringType()->length(2, 120)->setName('Le responsable'),
+            'email'       => v::email()->setName("L'email"),
+            'motif'       => v::stringType()->length(5, 255)->setName('Le motif'),
+            'date_debut'  => v::dateTime('Y-m-d\TH:i')->setName('La date de début'),
+            'date_fin'    => v::dateTime('Y-m-d\TH:i')->setName('La date de fin'),
         ];
 
         $erreurs = [];
@@ -26,7 +26,7 @@ final class ReservationValidator implements ValidatorInterface
             try {
                 $regle->assert($data[$champ] ?? null);
             } catch (ValidationException $e) {
-                $erreurs[$champ] = $e->getMessage();
+                $erreurs[$champ] = $this->extraireMessages($e);
             }
         }
 
@@ -35,5 +35,16 @@ final class ReservationValidator implements ValidatorInterface
         }
 
         return ValidationResult::success($data);
+    }
+
+    private function extraireMessages(ValidationException $e): array
+    {
+        $messages = $e->getMessages();
+
+        if (is_string($messages)) {
+            return [$messages];
+        }
+
+        return array_values($messages);
     }
 }
