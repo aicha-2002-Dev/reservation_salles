@@ -77,6 +77,8 @@ final class ReservationController
             ]);
         }
 
+        $_SESSION['messageSucces'] = 'Réservation créée avec succès.';
+
         $this->rediriger("/reservations/{$reservation->id}");
     }
 
