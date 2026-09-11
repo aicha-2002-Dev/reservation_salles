@@ -1,0 +1,45 @@
+@startuml Modele de donnees - Reservation de salles
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor White
+    BorderColor #2c5f7c
+    ArrowColor #2c5f7c
+}
+
+class Salle {
+    id : int
+    nom : string
+    batiment : string
+    capacite : int
+    type : string
+    active : bool
+    created_at : datetime
+    updated_at : datetime
+}
+
+note right of Salle
+  type ∈ {cours, informatique,
+  laboratoire, amphitheatre, reunion}
+end note
+
+class Reservation {
+    id : int
+    salle_id : int
+    responsable : string
+    email : string
+    motif : string
+    date_debut : datetime
+    date_fin : datetime
+    statut : string
+    created_at : datetime
+    updated_at : datetime
+}
+
+note right of Reservation
+  statut ∈ {confirmée, annulée}
+end note
+
+Salle "1" -- "0..*" Reservation : possède >
+
+@enduml
