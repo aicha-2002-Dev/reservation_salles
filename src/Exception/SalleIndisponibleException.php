@@ -1,5 +1,4 @@
 <?php
-// src/Exception/SalleIndisponibleException.php
 
 declare(strict_types=1);
 
