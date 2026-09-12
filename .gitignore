@@ -1,4 +1,5 @@
 
 /vendor/
 .env
-test-autoload.php
+
+.phpunit.result.cache
