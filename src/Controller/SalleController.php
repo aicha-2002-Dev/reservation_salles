@@ -7,20 +7,22 @@ namespace App\Controller;
 use App\DTO\CreerSalleDto;
 use App\DTO\ModifierSalleDto;
 use App\Exception\SalleIndisponibleException;
-use App\Repository\SalleRepositoryInterface;
+use App\Service\ConsulterSalleService;
 use App\Service\CreerSalleService;
 use App\Service\ModifierSalleService;
 use App\Validation\SalleValidator;
 use App\View\RendererInterface;
+use App\Session\SessionManagerInterface;
 
 final class SalleController extends AbstractController
 {
-   public function __construct(
+    public function __construct(
         RendererInterface $renderer,
-        private readonly SalleRepositoryInterface $salleRepository,
+        private readonly ConsulterSalleService $consulterSalleService,
         private readonly SalleValidator $validator,
         private readonly CreerSalleService $creerSalleService,
         private readonly ModifierSalleService $modifierSalleService,
+        private readonly SessionManagerInterface $session,
     ) {
         parent::__construct($renderer);
     }
@@ -29,37 +31,26 @@ final class SalleController extends AbstractController
     {
         return $this->renderView(
             'salle/index',
-            [
-                'salles' => $this->salleRepository->findAll()
-            ]
+            ['salles' => $this->consulterSalleService->lister()]
         );
     }
 
     public function show(int $id): string
     {
-        $salle = $this->salleRepository->findById($id);
-
-        if ($salle === null) {
-            return $this->renderView(
-                'error/404',
-                ['message' => 'Salle introuvable.']
-            );
+        try {
+            $salle = $this->consulterSalleService->trouver($id);
+        } catch (SalleIndisponibleException $e) {
+            return $this->renderView('error/404', ['message' => $e->getMessage()]);
         }
 
-        return $this->renderView(
-            'salle/show',
-            ['salle' => $salle]
-        );
+        return $this->renderView('salle/show', ['salle' => $salle]);
     }
 
     public function create(): string
     {
         return $this->renderView(
             'salle/create',
-            [
-                'erreurs' => [],
-                'anciennesValeurs' => []
-            ]
+            ['erreurs' => [], 'anciennesValeurs' => []]
         );
     }
 
@@ -68,13 +59,10 @@ final class SalleController extends AbstractController
         $resultat = $this->validator->validate($donneesFormulaire);
 
         if (!$resultat->isValid()) {
-            return $this->renderView(
-                'salle/create',
-                [
-                    'erreurs' => $resultat->errors(),
-                    'anciennesValeurs' => $donneesFormulaire,
-                ]
-            );
+            return $this->renderView('salle/create', [
+                'erreurs' => $resultat->errors(),
+                'anciennesValeurs' => $donneesFormulaire,
+            ]);
         }
 
         $donnees = $resultat->validatedData();
@@ -88,30 +76,20 @@ final class SalleController extends AbstractController
 
         $salle = $this->creerSalleService->creer($dto);
 
-        // Message de succès
-        $_SESSION['messageSucces'] = 'Salle créée avec succès.';
+        $this->session->flash('messageSucces', 'Salle créée avec succès.');
 
         $this->rediriger("/salles/{$salle->id}");
     }
 
     public function edit(int $id): string
     {
-        $salle = $this->salleRepository->findById($id);
-
-        if ($salle === null) {
-            return $this->renderView(
-                'error/404',
-                ['message' => 'Salle introuvable.']
-            );
+        try {
+            $salle = $this->consulterSalleService->trouver($id);
+        } catch (SalleIndisponibleException $e) {
+            return $this->renderView('error/404', ['message' => $e->getMessage()]);
         }
 
-        return $this->renderView(
-            'salle/edit',
-            [
-                'salle' => $salle,
-                'erreurs' => []
-            ]
-        );
+        return $this->renderView('salle/edit', ['salle' => $salle, 'erreurs' => []]);
     }
 
     public function update(int $id, array $donneesFormulaire): string
@@ -119,33 +97,24 @@ final class SalleController extends AbstractController
         $resultat = $this->validator->validate($donneesFormulaire);
 
         if (!$resultat->isValid()) {
-            $salle = $this->salleRepository->findById($id);
+            try {
+                $salle = $this->consulterSalleService->trouver($id);
+            } catch (SalleIndisponibleException $e) {
+                return $this->renderView('error/404', ['message' => $e->getMessage()]);
+            }
 
-            return $this->renderView(
-                'salle/edit',
-                [
-                    'salle' => $salle,
-                    'erreurs' => $resultat->errors()
-                ]
-            );
+            return $this->renderView('salle/edit', ['salle' => $salle, 'erreurs' => $resultat->errors()]);
         }
 
-        $dto = ModifierSalleDto::fromArray(
-            $id,
-            $resultat->validatedData()
-        );
+        $dto = ModifierSalleDto::fromArray($id, $resultat->validatedData());
 
         try {
             $salle = $this->modifierSalleService->modifier($dto);
         } catch (SalleIndisponibleException $e) {
-            return $this->renderView(
-                'error/404',
-                ['message' => $e->getMessage()]
-            );
+            return $this->renderView('error/404', ['message' => $e->getMessage()]);
         }
 
-        // Message de succès
-        $_SESSION['messageSucces'] = 'Salle modifiée avec succès.';
+        $this->session->flash('messageSucces', 'Salle modifiée avec succès.');
 
         $this->rediriger("/salles/{$salle->id}");
     }

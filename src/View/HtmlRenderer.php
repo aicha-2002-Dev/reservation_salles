@@ -4,14 +4,20 @@ declare(strict_types=1);
 
 namespace App\View;
 use App\View\RendererInterface;
+use App\Session\SessionManagerInterface;
+
 
 final class HtmlRenderer implements RendererInterface
 {
+   public function __construct(
+        private readonly SessionManagerInterface $session,
+    ) {}
+    
     public function renderView(string $vue, array $donnees): string
     {
         extract($donnees);
 
-        $messageSucces = $_SESSION['messageSucces'] ?? null;
+        $messageSucces = $this->session->recupererFlash('messageSucces');
         unset($_SESSION['messageSucces']);
 
           ob_start();

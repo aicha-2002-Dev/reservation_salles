@@ -7,36 +7,41 @@ namespace App\Controller;
 use App\DTO\CreerReservationDto;
 use App\Exception\ReglesMetierException;
 use App\Exception\SalleIndisponibleException;
-use App\Repository\ReservationRepositoryInterface;
-use App\Service\CreerReservationService;
-use App\Validation\ReservationValidator;
 use App\Exception\ReservationIntrouvableException;
+use App\Service\ConsulterReservationService;
+use App\Service\CreerReservationService;
 use App\Service\AnnulerReservationService;
+use App\Session\SessionManagerInterface;
+use App\Validation\ReservationValidator;
 use App\View\RendererInterface;
 
 final class ReservationController extends AbstractController
 {
     public function __construct(
         RendererInterface $renderer,
-        private readonly ReservationRepositoryInterface $reservationRepository,
+        private readonly ConsulterReservationService $consulterReservationService,
         private readonly ReservationValidator $validator,
         private readonly CreerReservationService $creerReservationService,
-        private readonly AnnulerReservationService $annulerReservationService
+        private readonly AnnulerReservationService $annulerReservationService,
+        private readonly SessionManagerInterface $session,
     ) {
         parent::__construct($renderer);
     }
 
     public function index(): string
     {
-        return $this->renderView('reservation/index', ['reservations' => $this->reservationRepository->findAll()]);
+        return $this->renderView(
+            'reservation/index',
+            ['reservations' => $this->consulterReservationService->lister()]
+        );
     }
 
     public function show(int $id): string
     {
-        $reservation = $this->reservationRepository->findById($id);
-
-        if ($reservation === null) {
-            return $this->renderView('error/404', ['message' => "Réservation introuvable."]);
+        try {
+            $reservation = $this->consulterReservationService->trouver($id);
+        } catch (ReservationIntrouvableException $e) {
+            return $this->renderView('error/404', ['message' => $e->getMessage()]);
         }
 
         return $this->renderView('reservation/show', ['reservation' => $reservation]);
@@ -78,7 +83,7 @@ final class ReservationController extends AbstractController
             ]);
         }
 
-        $_SESSION['messageSucces'] = 'Réservation créée avec succès.';
+        $this->session->flash('messageSucces', 'Réservation enregistrée avec succès.');
 
         $this->rediriger("/reservations/{$reservation->id}");
     }
@@ -90,6 +95,8 @@ final class ReservationController extends AbstractController
         } catch (ReservationIntrouvableException $e) {
             return $this->renderView('error/404', ['message' => $e->getMessage()]);
         }
+
+        $this->session->flash('messageSucces', 'Réservation annulée avec succès.');
 
         $this->rediriger('/reservations');
     }
