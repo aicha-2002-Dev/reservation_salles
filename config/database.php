@@ -23,6 +23,10 @@ return static function (): Capsule {
             'charset'   => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
             'prefix'    => '',
+            'options'   => [
+                \PDO::MYSQL_ATTR_SSL_CA => null,
+                \PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+            ],
         ]);
 
         $capsule->setAsGlobal();

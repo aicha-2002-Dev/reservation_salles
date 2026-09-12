@@ -320,19 +320,33 @@ pertinentes à sa ressource.
 `SalleRepositoryInterface`, jamais de `SalleRepository` directement — permettant
 l'injection d'une doublure dans `tests/Unit/CreerReservationServiceTest.php`.
 
-## [1.0.0] - 2026-09-10
+## [1.0.0] - 2026-09-12
 
 ### Ajouté
 - Mise en forme CSS complète (`public/assets/style.css`) : palette, tableaux, formulaires, badges de statut, responsive
-- Messages flash de succès/erreur après les actions de création et d'annulation
-- README.md complet (prérequis, installation, configuration, tests)
+- Messages flash de succès/erreur après les actions de création, modification et annulation, via `SessionManagerInterface`/`PhpSessionManager`
+- `RendererInterface` avec `HtmlRenderer` (et `JsonRenderer` en préparation pour une future API), permettant de changer de format de sortie sans modifier les contrôleurs
+- `AbstractController` : socle commun aux contrôleurs (rendu de vue, redirection)
+- `ConsulterSalleService` et `ConsulterReservationService` : les contrôleurs ne dépendent plus jamais des Repositories, y compris en lecture
+- `Application::run()` : point d'entrée applicatif orchestrant le dispatch FastRoute, la résolution des contrôleurs via le conteneur, et la gestion centralisée des réponses 404/405/500
+- `entrypoint.sh` : automatise, au démarrage du conteneur Docker, l'attente de disponibilité de MySQL, l'exécution des migrations et du script de données initiales, avant de lancer le serveur
+- README.md complet (prérequis, installation, configuration, tests, liens de déploiement)
 - ARCHITECTURE.md : analyse des 14 notions demandées (MVC, Repository, SOLID...)
-- Diagramme de classes (`diagramme-de-classes.md`)
+- Diagramme de classes du modèle de données (Salle/Reservation), au format PlantUML
+- Dockerisation complète de l'application (Dockerfile, docker-compose.yml) et publication de l'image sur Docker Hub
+
+### Modifié
+- `public/index.php` simplifié à sa plus simple expression, toute la logique de dispatch déléguée à `Application::run()`
+- `config/container.php` retourne désormais un tableau de définitions (conforme au format attendu), incluant `Dispatcher` et `Application`
+
+### Supprimé
+- `RenderViewTrait`, remplacé par `RendererInterface`/`HtmlRenderer`
+- `config/conteneur_transitoire.php`, remplacé par le vrai conteneur PHP-DI
 
 ### Corrigé
-- Gestion propre des exceptions non prévues (page d'erreur générique au lieu d'un plantage brut)
+- Gestion propre des exceptions non prévues (page d'erreur générique au lieu d'un plantage brut), centralisée dans `Application::run()`
+- Normalisation des messages d'erreur de Respect\Validation (`setName()`, `extraireMessages()`)
 - Anomalies mineures relevées lors de la vérification sur dépôt fraîchement cloné
-
 ## [0.12.0] - 2026-09-09
 
 ### Ajouté
