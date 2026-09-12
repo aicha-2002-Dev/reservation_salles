@@ -20,13 +20,20 @@ final class SalleValidator implements ValidatorInterface
             'type'     => v::in(self::TYPES_AUTORISES)->setName('Le type'),
         ];
 
+        $messages = [
+            'nom'      => "Le nom de la salle doit etre compris entre 2 et 100 caracteres.",
+            'batiment' => "Le batiment doit etre compris entre 2 et 100 caracteres.",
+            'capacite' => "La capacite doit etre un nombre compris entre 1 et 1000.",
+            'type'     => "Le type de la salle n'est pas valide.",
+        ];
+
         $erreurs = [];
 
         foreach ($regles as $champ => $regle) {
             try {
                 $regle->assert($data[$champ] ?? null);
             } catch (ValidationException $e) {
-                $erreurs[$champ] = $this->extraireMessages($e);
+                $erreurs[$champ] = [$messages[$champ]];
             }
         }
 
@@ -37,14 +44,4 @@ final class SalleValidator implements ValidatorInterface
         return ValidationResult::success($data);
     }
 
-    private function extraireMessages(ValidationException $e): array
-    {
-        $messages = $e->getMessage();
-
-        if (is_string($messages)) {
-            return [$messages];
-        }
-
-        return array_values($messages);
-    }
 }

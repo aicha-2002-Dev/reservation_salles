@@ -19,6 +19,14 @@ final class ReservationValidator implements ValidatorInterface
             'date_debut'  => v::dateTime('Y-m-d\TH:i')->setName('La date de début'),
             'date_fin'    => v::dateTime('Y-m-d\TH:i')->setName('La date de fin'),
         ];
+        $messages = [
+            'salle_id'    => "L'identifiant de la salle est obligatoire et doit etre un nombre positif.",
+            'responsable' => "Le responsable doit contenir entre 2 et 120 caracteres.",
+            'email'       => "L'email n'est pas valide.",
+            'motif'       => "Le motif doit contenir entre 5 et 255 caracteres.",
+            'date_debut'  => "La date de debut n'est pas valide.",
+            'date_fin'    => "La date de fin n'est pas valide."
+        ];
 
         $erreurs = [];
 
@@ -26,7 +34,7 @@ final class ReservationValidator implements ValidatorInterface
             try {
                 $regle->assert($data[$champ] ?? null);
             } catch (ValidationException $e) {
-                $erreurs[$champ] = $this->extraireMessages($e);
+                $erreurs[$champ] = [$messages[$champ]];
             }
         }
 
@@ -37,14 +45,5 @@ final class ReservationValidator implements ValidatorInterface
         return ValidationResult::success($data);
     }
 
-    private function extraireMessages(ValidationException $e): array
-    {
-        $messages = $e->getMessage();
 
-        if (is_string($messages)) {
-            return [$messages];
-        }
-
-        return array_values($messages);
-    }
 }
