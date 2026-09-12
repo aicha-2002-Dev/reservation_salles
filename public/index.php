@@ -2,15 +2,17 @@
 
 declare(strict_types=1);
 
-session_start();
+use App\Application;
+use DI\ContainerBuilder;
 
-require __DIR__ . '/../vendor/autoload.php';
+require dirname(__DIR__) . '/vendor/autoload.php';
 
-$capsuleFactory = require __DIR__ . '/../config/database.php';
+$capsuleFactory = require dirname(__DIR__) . '/config/database.php';
 $capsuleFactory();
 
-$containerFactory = require __DIR__ . '/../config/container.php';
-$container = $containerFactory();
+$builder = new ContainerBuilder();
+$builder->addDefinitions(dirname(__DIR__) . '/config/container.php');
+$container = $builder->build();
 
-$routeur = require __DIR__ . '/../routes/index.php';
-$routeur($container);
+$application = $container->get(Application::class);
+$application->run();
