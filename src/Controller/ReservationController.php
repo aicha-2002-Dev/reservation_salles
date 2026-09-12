@@ -10,20 +10,21 @@ use App\Exception\SalleIndisponibleException;
 use App\Repository\ReservationRepositoryInterface;
 use App\Service\CreerReservationService;
 use App\Validation\ReservationValidator;
-use App\Controller\RenderViewTrait;
 use App\Exception\ReservationIntrouvableException;
 use App\Service\AnnulerReservationService;
+use App\View\RendererInterface;
 
-final class ReservationController
+final class ReservationController extends AbstractController
 {
-    use RenderViewTrait;
-
     public function __construct(
+        RendererInterface $renderer,
         private readonly ReservationRepositoryInterface $reservationRepository,
         private readonly ReservationValidator $validator,
         private readonly CreerReservationService $creerReservationService,
         private readonly AnnulerReservationService $annulerReservationService
-    ) {}
+    ) {
+        parent::__construct($renderer);
+    }
 
     public function index(): string
     {

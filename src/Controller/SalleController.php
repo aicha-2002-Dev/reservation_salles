@@ -11,17 +11,19 @@ use App\Repository\SalleRepositoryInterface;
 use App\Service\CreerSalleService;
 use App\Service\ModifierSalleService;
 use App\Validation\SalleValidator;
+use App\View\RendererInterface;
 
-final class SalleController
+final class SalleController extends AbstractController
 {
-    use RenderViewTrait;
-
-    public function __construct(
+   public function __construct(
+        RendererInterface $renderer,
         private readonly SalleRepositoryInterface $salleRepository,
         private readonly SalleValidator $validator,
         private readonly CreerSalleService $creerSalleService,
         private readonly ModifierSalleService $modifierSalleService,
-    ) {}
+    ) {
+        parent::__construct($renderer);
+    }
 
     public function index(): string
     {
